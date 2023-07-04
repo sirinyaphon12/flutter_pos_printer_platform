@@ -1,3 +1,4 @@
+- fork 下来此仓库的目的主要是原仓库依赖的 `image` 库为 4.x，而 `esc_pos_utils` 依赖的 `image` 为 3.x 
 # flutter_pos_printer_platform
 
 [![Pub Version](https://img.shields.io/badge/pub-v1.4.1-green)](https://pub.dev/packages/flutter_pos_printer_platform)
