@@ -42,7 +42,7 @@ class PrinterManager {
       }
     } else {
       try {
-        var conn = await tcpPrinterConnector.connect(model as TcpPrinterInput);
+        var conn = await tcpPrinterConnector.connectAndKeep(model as TcpPrinterInput);
         return conn;
       } catch (e) {
         throw Exception('model must be type of TcpPrinterInput');
