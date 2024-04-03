@@ -127,17 +127,20 @@ class TcpPrinterConnector implements PrinterConnector<TcpPrinterInput> {
         _statusStreamController.add(status);
 
         // Create ping object with desired args
-        final ping = Ping('${model.ipAddress}', interval: 3, timeout: 7);
+        if (!Platform.isIOS) {
+          final ping = Ping('${model.ipAddress}', interval: 3, timeout: 7);
 
-        // Begin ping process and listen for output
-        ping.stream.listen((PingData data) {
-          if (data.error != null) {
-            debugPrint(' ----- ping error ${data.error}');
-            _socket?.destroy();
-            status = TCPStatus.none;
-            _statusStreamController.add(status);
-          }
-        });
+          // Begin ping process and listen for output
+          ping.stream.listen((PingData data) {
+            if (data.error != null) {
+              debugPrint(' ----- ping error ${data.error}');
+              _socket?.destroy();
+              status = TCPStatus.none;
+              _statusStreamController.add(status);
+            }
+          });
+        }
+
         listenSocket();
       }
       return true;
