@@ -2,6 +2,7 @@ package com.sersoluciones.flutter_pos_printer_platform.bluetooth
 
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
@@ -15,7 +16,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.Result
 
 
-class BluetoothService(private var bluetoothHandler: Handler?) {
+class BluetoothService(private var bluetoothHandler: Handler?, private var context: Context) {
     private var scanning = false
     private val handler = Handler(Looper.getMainLooper())
     private var currentActivity: Activity? = null
@@ -25,7 +26,11 @@ class BluetoothService(private var bluetoothHandler: Handler?) {
     private var result: Result? = null
 
     val mBluetoothAdapter: BluetoothAdapter by lazy {
-        BluetoothAdapter.getDefaultAdapter()
+        var oldAdapter = BluetoothAdapter.getDefaultAdapter()
+        if(oldAdapter != null) oldAdapter
+        var manager = context.getSystemService(BluetoothManager::class.java)
+        var adapter = manager.getAdapter()
+        adapter!!
     }
 
     private val bleScanner by lazy {
@@ -250,9 +255,9 @@ class BluetoothService(private var bluetoothHandler: Handler?) {
         var bluetoothConnection: IBluetoothConnection? = null
 
 
-        fun getInstance(bluetoothHandler: Handler): BluetoothService {
+        fun getInstance(bluetoothHandler: Handler, context: Context): BluetoothService {
             if (mInstance == null) {
-                mInstance = BluetoothService(bluetoothHandler)
+                mInstance = BluetoothService(bluetoothHandler, context)
             }
             return mInstance!!
         }

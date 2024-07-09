@@ -37,43 +37,50 @@ import io.flutter.plugin.common.BinaryMessenger
 class FlutterPosPrinterPlaformPluginHandlers internal constructor(private val plugin: FlutterPosPrinterPlatformPlugin) :
     PluginRegistry.RequestPermissionsResultListener, PluginRegistry.ActivityResultListener {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        when (requestCode) {
-            PERMISSION_ENABLE_BLUETOOTH -> {
-                plugin.setRequestPermissionBT(false)
+        try{
+            when (requestCode) {
+                PERMISSION_ENABLE_BLUETOOTH -> {
+                    plugin.setRequestPermissionBT(false)
 
-                Log.d(TAG, "PERMISSION_ENABLE_BLUETOOTH PERMISSION_GRANTED resultCode $resultCode")
-                if (resultCode == Activity.RESULT_OK)
-                    if (plugin.isOnScan())
-                        if (plugin.isUsingBle()) plugin.scanBleDevice() else  plugin.scanBluDevice()
+                    Log.d(TAG, "PERMISSION_ENABLE_BLUETOOTH PERMISSION_GRANTED resultCode $resultCode")
+                    if (resultCode == Activity.RESULT_OK)
+                        if (plugin.isOnScan())
+                            if (plugin.isUsingBle()) plugin.scanBleDevice() else  plugin.scanBluDevice()
 
+                }
             }
+        } catch(error: Exception){
+            Log.w(TAG, "$error")
         }
         return true
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
         Log.d(TAG, " --- requestCode $requestCode")
-        when (requestCode) {
+        try{
+            when (requestCode) {
+                PERMISSION_ALL -> {
+                    var grant = true
+                    grantResults.forEach { permission ->
 
-            PERMISSION_ALL -> {
-                var grant = true
-                grantResults.forEach { permission ->
+                        val permissionGranted = grantResults.isNotEmpty() &&
+                                permission == PackageManager.PERMISSION_GRANTED
+                        Log.d(TAG, " --- requestCode $requestCode permission $permission permissionGranted $permissionGranted")
+                        if (!permissionGranted) grant = false
 
-                    val permissionGranted = grantResults.isNotEmpty() &&
-                            permission == PackageManager.PERMISSION_GRANTED
-                    Log.d(TAG, " --- requestCode $requestCode permission $permission permissionGranted $permissionGranted")
-                    if (!permissionGranted) grant = false
-
+                    }
+                    if (!grant) {
+                        Toast.makeText(plugin.getContext(), R.string.not_permissions, Toast.LENGTH_LONG).show()
+                    } else {
+                        if (plugin.verifyAndCheckBluetoothStatus() && plugin.isOnScan())
+                            if (plugin.isUsingBle()) plugin.scanBleDevice() else plugin.scanBluDevice()
+                    }
+                    return true
                 }
-                if (!grant) {
-                    Toast.makeText(plugin.getContext(), R.string.not_permissions, Toast.LENGTH_LONG).show()
-                } else {
-                    if (plugin.verifyAndCheckBluetoothStatus() && plugin.isOnScan())
-                        if (plugin.isUsingBle()) plugin.scanBleDevice() else plugin.scanBluDevice()
-                }
-                return true
             }
-        }
+        } catch(error: Exception){
+            Log.w(TAG, "$error")
+        } 
         return false
     }
 
@@ -238,40 +245,10 @@ class FlutterPosPrinterPlatformPlugin : FlutterPlugin, MethodCallHandler, Activi
 
     override fun onAttachedToEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         flutterPluginBinding = binding
+        context = binding.applicationContext
         if(methodChannel == null){
             initPlugin(binding.binaryMessenger)
         }
-        // channel.setMethodCallHandler(this)
-
-        // messageChannel = EventChannel(flutterPluginBinding.binaryMessenger, eventChannelBT)
-        // messageChannel?.setStreamHandler(object : EventChannel.StreamHandler {
-
-        //     override fun onListen(p0: Any?, sink: EventChannel.EventSink) {
-        //         eventSink = sink
-        //     }
-
-        //     override fun onCancel(p0: Any?) {
-        //         eventSink = null
-        //     }
-        // })
-
-        // messageUSBChannel = EventChannel(flutterPluginBinding.binaryMessenger, eventChannelUSB)
-        // messageUSBChannel?.setStreamHandler(object : EventChannel.StreamHandler {
-
-        //     override fun onListen(p0: Any?, sink: EventChannel.EventSink) {
-        //         eventUSBSink = sink
-        //     }
-
-        //     override fun onCancel(p0: Any?) {
-        //         eventUSBSink = null
-        //     }
-        // })
-
-        // context = flutterPluginBinding.applicationContext
-        // adapter = USBPrinterService.getInstance(usbHandler)
-        // adapter.init(context)
-
-        // bluetoothService = BluetoothService.getInstance(bluetoothHandler)
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -313,11 +290,15 @@ class FlutterPosPrinterPlatformPlugin : FlutterPlugin, MethodCallHandler, Activi
         })
 
         context = flutterPluginBinding?.applicationContext
+
         adapter = USBPrinterService.getInstance(usbHandler)
         adapter?.init(context)
 
-        var blsv = BluetoothService.getInstance(bluetoothHandler)
+        var ctx = context
 
+        if(ctx == null) return
+
+        var blsv = BluetoothService.getInstance(bluetoothHandler, ctx)
         bluetoothService = blsv
         blsv.setActivity(currentActivity)
     }
@@ -570,48 +551,6 @@ class FlutterPosPrinterPlatformPlugin : FlutterPlugin, MethodCallHandler, Activi
     internal fun verifyAndCheckBluetoothStatus(): Boolean {
         return verifyIsBluetoothIsOn()
     }
-
-    // override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-    //     when (requestCode) {
-    //         PERMISSION_ENABLE_BLUETOOTH -> {
-    //             requestPermissionBT = false
-
-    //             Log.d(TAG, "PERMISSION_ENABLE_BLUETOOTH PERMISSION_GRANTED resultCode $resultCode")
-    //             if (resultCode == Activity.RESULT_OK)
-    //                 if (isScan)
-    //                     if (isBle) bluetoothService.scanBleDevice(channel) else bluetoothService.scanBluDevice(channel)
-
-    //         }
-    //     }
-    //     return true
-    // }
-
-    // override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
-    //     Log.d(TAG, " --- requestCode $requestCode")
-    //     when (requestCode) {
-
-    //         PERMISSION_ALL -> {
-    //             var grant = true
-    //             grantResults.forEach { permission ->
-
-    //                 val permissionGranted = grantResults.isNotEmpty() &&
-    //                         permission == PackageManager.PERMISSION_GRANTED
-    //                 Log.d(TAG, " --- requestCode $requestCode permission $permission permissionGranted $permissionGranted")
-    //                 if (!permissionGranted) grant = false
-
-    //             }
-    //             if (!grant) {
-    //                 Toast.makeText(context, R.string.not_permissions, Toast.LENGTH_LONG).show()
-    //             } else {
-    //                 if (verifyIsBluetoothIsOn() && isScan)
-    //                     if (isBle) bluetoothService.scanBleDevice(channel) else bluetoothService.scanBluDevice(channel)
-    //             }
-    //             return true
-    //         }
-    //     }
-    //     return false
-    // }
-
     
     companion object {
         const val PERMISSION_ALL = 1
