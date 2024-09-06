@@ -16,7 +16,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.Result
 
 
-class BluetoothService(private var bluetoothHandler: Handler?, private var context: Context) {
+class BluetoothService private constructor(private var bluetoothHandler: Handler?, private var context: Context) {
     private var scanning = false
     private val handler = Handler(Looper.getMainLooper())
     private var currentActivity: Activity? = null
