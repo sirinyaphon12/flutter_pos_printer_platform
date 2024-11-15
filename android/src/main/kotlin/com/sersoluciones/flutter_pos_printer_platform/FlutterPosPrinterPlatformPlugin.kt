@@ -160,18 +160,18 @@ class FlutterPosPrinterPlatformPlugin : FlutterPlugin, ActivityAware {
                             if(blsv != null) blsv.removeReconnectHandlers()
                         }
                         BluetoothConstants.STATE_CONNECTING -> {
-                            Log.w(TAG, "connection BT STATE_CONNECTING")
+                            Log.w(TAG, "#connection BT STATE_CONNECTING")
                             eventSink?.success(1)
                         }
                         BluetoothConstants.STATE_NONE -> {
-                            Log.w(TAG, "connection BT STATE_NONE")
+                            Log.w(TAG, "#connection BT STATE_NONE ")
                             eventSink?.success(0)
                             var blsv = bluetoothService
                             if(blsv != null) blsv.autoConnectBt()
 
                         }
                         BluetoothConstants.STATE_FAILED -> {
-                            Log.w(TAG, " connection BT STATE_FAILED")
+                            Log.w(TAG, "#connection BT STATE_FAILED")
                             if (msg.obj != null)
                                 try {
                                     val result = msg.obj as Result?
